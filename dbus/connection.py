@@ -577,6 +577,16 @@ class Connection(_Connection):
 
         if reply_handler is None and error_handler is None:
             # we don't care what happens, so just send it
+            # but set first no_reply flag to avoid overflowing
+            # pending_replies queue in bus_connections_expect_reply
+            # inside dbus library (bus/connection.c)
+            try:
+                message.set_no_reply(True)
+            except Exception as e:
+                logging.basicConfig()
+                _logger.error('Unable to set no_reply: %s: %s',
+                              e.__class__, e)
+                raise
             self.send_message(message)
             return
 
